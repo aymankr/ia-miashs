@@ -2,25 +2,25 @@ from apriori import Apriori
 
 data = {100:[1, 3, 4], 200:[2, 3, 5], 300:[1, 2, 3, 5], 400:[2, 5]}
 db = Apriori(data)
-# print("dbase", db.dbase)
-# print("candidates_sz", db.candidates_sz)
-# print("support_history", db.support_history)
-# print("candidates", db.candidates)
-# print("current", db.current)
-# print("main(.3)", db.main(.3))
-# print("candidates_sz", db.candidates_sz)
-# print("support_history", db.support_history)
-# print("candidates", db.candidates)
-# print("current", db.current)
-
-data = {'a': [3,5,7], 'b':[3,5], 'c':[7,3], 'd':[5,7], 'e': [7,5],
-               'f': [7,3,5], 'g':[7,5,3]}
-db = Apriori(data)
-print("main(.3)", db.main(.5))
+print("dbase", db.dbase)
 print("candidates_sz", db.candidates_sz)
 print("support_history", db.support_history)
 print("candidates", db.candidates)
 print("current", db.current)
+print("main(.3)", db.main(.3))
+print("candidates_sz", db.candidates_sz)
+print("support_history", db.support_history)
+print("candidates", db.candidates)
+print("current", db.current)
+
+# data = {'a': [3,5,7], 'b':[3,5], 'c':[7,3], 'd':[5,7], 'e': [7,5],
+#                'f': [7,3,5], 'g':[7,5,3]}
+# db = Apriori(data)
+# print("main(.3)", db.main(.5))
+# print("candidates_sz", db.candidates_sz)
+# print("support_history", db.support_history)
+# print("candidates", db.candidates)
+# print("current", db.current)
 
 
 """
@@ -38,13 +38,6 @@ print("current", db.current)
             (5, 7): {'d', 'e', 'g', 'a', 'f'}
             }
  """
-
-
-
-
-
-
-
 
 # print("dbase", db.dbase)
 # print("candidates_sz", db.candidates_sz)

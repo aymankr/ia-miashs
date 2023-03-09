@@ -132,11 +132,20 @@ class TestReset(TestInit):
         _values = {att: getattr(obj, att) for att in lattr} # collect values
         # check content
         self.assertEqual(_values['list_itemsets'], lst,
-                         "wrong itemsets")
+                         "wrong itemsets"
+                         "found {}\nexpect {}"
+                         "".format(_values['list_itemsets'], lst)
+                         )
         self.assertEqual(_values['support_itemsets'], dsupp,
-                         "wrong itemsets support dictionnary")
+                         "wrong itemsets support dictionnary"
+                         "found {}\nexpect {}"
+                         "".format(_values['support_itemsets'], dsupp)
+                         )
         self.assertEqual(_values['rules'], [],
-                         "wrong list of rules")
+                         "wrong list of rules"
+                         "found {}\nexpect {}"
+                         "".format(_values['rules'], [])
+                         )
         _bag = set([])
         for x in [set(l) for l in lst]: _bag.update(x)
         _keys = set(dsupp.keys())
@@ -369,8 +378,11 @@ class TestAlgorithm(unittest.TestCase):
                             "".format(b))
             self.assertTrue(set(a+b) == set(_g),
                             "wrong rule {}+{} != {}".format(a,b,_g))
-        self.assertEqual(_o, [(2,), (5,)],
-                         "wrong output of validation")
+        _e = [(2,), (5,)]
+        self.assertEqual(_o, _e,
+                         "wrong output of validation"
+                         "\nfound {}\nexpect {}"
+                         "".format(_o, _e))
 
     
     @patch('builtins.print')
@@ -380,7 +392,7 @@ class TestAlgorithm(unittest.TestCase):
         chk.check_attr(obj, 'build_rules')
         chk.check_attr(obj, 'rules')
         _itset = (2,3,5)
-        _rhs = [ tuple([x]) for x in _itset ]
+        _rhs = [ (x,) for x in _itset ]
         for v in range(1,7):
             with self.subTest(seuil="1/{}".format(v)):
                 _old = len(obj.rules)
@@ -449,10 +461,24 @@ class TestMain(unittest.TestCase):
         for k in dic:
             with self.subTest(minConf=k):
                 _current = len(obj.rules)
-                self.assertEqual(_old, _current, "rules have been changed")
+                self.assertEqual(_old, _current,
+                                 "rules have been changed"
+                                 " before any calculus for confidence {}"
+                                 "".format(k)
+                                 )
                 _out = obj.main(k)
+                self.assertEqual(_out.shape[1], _nine,
+                                 "expect {} columns found {}"
+                                 "".format(_nine, _out.shape[1])
+                                 )
+                self.assertEqual(_out.shape[0], dic[k][0],
+                                 "expect {} rules found {}"
+                                 "".format(dic[k][0], _out.shape[0])
+                                 )
+                
                 self.assertTrue(_out.shape==(dic[k][0],_nine),
-                                  "expect {}".format( (dic[k][0],_nine) ))
+                                  "expecting shape {}\nfound {}"
+                                "".format( (dic[k][0],_nine), _out.shape ))
                 _old = len(obj.rules)
                 self.assertEqual(dic[k][0], _old,
                                  "expect {} rules found {}"

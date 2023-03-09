@@ -495,16 +495,14 @@ class TestMain(unittest.TestCase):
                     _good = resultat_main[i][k]
                     # output of main
                     self.assertTrue(_out==_good,
-                                    "k={} minsupp={:.2f}\nfound: {}\nexpect {}"
-                                    "".format(k,minsupp,_out,_good))
+                        f"data={k} {minsupp=:.2f}\ngot {_out}\nexpect {_good}")
                     # attributes
                     for att in _latt.split():
                         if att == "support_history": continue
                         _out = getattr(obj, att)
                         _good = resultat_att[i][k].get(att, None)
                         self.assertEqual(_out,_good,
-                                    "k={} minsupp={:.2f}\nfound: {}\nexpect {}"
-                                    "".format(k,minsupp,_out,_good))
+                            f"{k=} {minsupp=:.2f}\ngot {_out}\nexpect {_good}")
                         
                     
 def suite(fname):

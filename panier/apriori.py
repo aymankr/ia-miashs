@@ -38,14 +38,14 @@ class Apriori:
         return {x: v for x, v in a.items() if v >= minsupp}
 
     def scan_dbase(self, minsupp: float):
-        assert 0 <= minsupp <= 1
         """
         mettre à jour support_history avec update en fonction de la
         fréquence en paramètre, mettre à jour current
         """
-        self.support_history.update(self.support(minsupp))
+        new_support = self.support(minsupp)
+        self.support_history.update(new_support)
         self.current = {x: v for x, v in self.current.items(
-        ) if x in self.support_history.keys()}
+        ) if x in new_support.keys()}
 
     def Lk(self) -> list:
         """
@@ -71,7 +71,7 @@ class Apriori:
         if futur:
             self.current = futur
             self.candidates = {}
-
+    
             tids = list({x for v in self.current.values() for x in v})
             for tid in tids:
                 self.candidates[tid] = [
@@ -79,8 +79,7 @@ class Apriori:
             self.candidates_sz += 1
 
     def main(self, minsupp: float) -> list:
-        assert 0 <= minsupp <= 1
-
+        self.reset()
         main = []
         sz = self.candidates_sz
         while sz == self.candidates_sz:

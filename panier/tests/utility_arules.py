@@ -3,7 +3,7 @@
 
 __date__ = "30.01.23"
 __author__ = "mmc <marc-michel dot corsini at u-bordeaux dot fr>"
-__update__ = "30.01.23 13:50"
+__update__ = "03.03.23 15:25"
 
 """
 utility for the Arules class
@@ -38,6 +38,7 @@ signatures = {'__init__': ([list, dict],),
               }
 required = signatures.keys()
 
+# samples[i] = List of list of itsemset, dict itset: support
 samples = {1: ([[(1,), (2,), (3,), (4,)], [ (1,2), (1,4), (2,3)]], 
 		{(1,): .5, (2,): .5, (3,): .5, (4,): .5, 
 		 (1,2): .3, (1,4): .25, (2,3): .4}),
@@ -65,7 +66,7 @@ samples = {1: ([[(1,), (2,), (3,), (4,)], [ (1,2), (1,4), (2,3)]],
 meanings = ['', 'lait', 'pain', 'fruits', 'beurre',
             'oeufs', 'bieres', 'couches']
 
-# (minSupp, maxitsets, minConf, a->b & b->a)
+# (minSupp, maxitsets, {minConf: (nbrules, a->b & b->a)}
 # if minConf < last output is identical
 out_rules = {1: (.25, 2, {1.: (0,True),
                           .75: (2, True),
