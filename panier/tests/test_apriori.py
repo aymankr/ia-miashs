@@ -3,7 +3,7 @@
 
 __date__ = "27.01.23"
 __author__ = "mmc <marc-michel dot corsini at u-bordeaux dot fr>"
-__update__ = "06.01.23 15:50"
+__update__ = "09.03.23 14:30"
 __usage__="""
 tests for the Apriori class
 """
@@ -75,7 +75,7 @@ class TestDefault(unittest.TestCase):
                 for k,v in zip(_s.parameters, _e[0]):
                     _a = _s.parameters[k].annotation
                     self.assertEqual(_a, v,
-                                     "expect type {} found type {}"
+                                     "expect type {1} found type {0}"
                                      "".format(_a,v))
                 if len(_e) == 2:
                     self.assertEqual(_s.return_annotation, _e[1],
@@ -495,14 +495,16 @@ class TestMain(unittest.TestCase):
                     _good = resultat_main[i][k]
                     # output of main
                     self.assertTrue(_out==_good,
-                        f"data={k} {minsupp=:.2f}\ngot {_out}\nexpect {_good}")
+                        "data={} {:.2f}\ngot {}\nexpect {}"
+                                    "".format(k,minsupp,_out,_good))
                     # attributes
                     for att in _latt.split():
                         if att == "support_history": continue
                         _out = getattr(obj, att)
                         _good = resultat_att[i][k].get(att, None)
                         self.assertEqual(_out,_good,
-                            f"{k=} {minsupp=:.2f}\ngot {_out}\nexpect {_good}")
+                                         "{} {:.2f}\ngot {}\nexpect {}"
+                                         "".format(k,minsupp,_out,_good))
                         
                     
 def suite(fname):

@@ -3,7 +3,7 @@
 
 __date__ = "30.01.23"
 __author__ = "mmc <marc-michel dot corsini at u-bordeaux dot fr>"
-__update__ = "02.02.23 06:03"
+__update__ = "10.03.23 16:37"
 __usage__="""
 tests for the Arules class
 """
@@ -14,7 +14,11 @@ import unittest
 from unittest.mock import patch
 from tools import checkTools as chk
 # 2 imports pour la méthode 'main'
-import pandas as pd
+try:
+    import pandas as pd
+except Exception as _e:
+    print("pandas library is missing")
+    
 import numpy as np
 
 try:
@@ -75,7 +79,7 @@ class TestDefault(unittest.TestCase):
                 for k,v in zip(_s.parameters, _e[0]):
                     _a = _s.parameters[k].annotation
                     self.assertEqual(_a, v,
-                                     "expect type {} found type {}"
+                                     "expect type {1} found type {0}"
                                      "".format(_a,v))
                 if len(_e) == 2:
                     self.assertEqual(_s.return_annotation, _e[1],
@@ -295,15 +299,19 @@ class TestMetrics(unittest.TestCase):
         chk.check_attr(obj, 'lift_diag')
         lhs, rhs = (2,5), (3,) # lift < 1
         _0 = obj.lift_diag(lhs, rhs)
-        self.assertTrue(str(lhs) in _0)
-        self.assertTrue(str(rhs) in _0)
+        self.assertTrue(str(lhs) in _0,
+                        "missing {} in your msg '{}'".format(lhs, _0))
+        self.assertTrue(str(rhs) in _0,
+                        "missing {} in your msg '{}'".format(rhs, _0))
         _msg = "ne peuvent pas co-exister dans une règle"
         self.assertTrue(_msg in _0,
                         "missing '{}' got <{}>".format(_msg, _0))
         lhs, rhs = (2,3), (5,) # lift > 1
         _0 = obj.lift_diag(lhs, rhs)
-        self.assertTrue(str(lhs) in _0)
-        self.assertTrue(str(rhs) in _0)
+        self.assertTrue(str(lhs) in _0,
+                        "missing {} in your msg '{}'".format(lhs, _0))
+        self.assertTrue(str(rhs) in _0,
+                        "missing {} in your msg '{}'".format(rhs, _0))
         _msg = "est prédictive"
         self.assertTrue(_msg in _0,
                         "missing '{}' got <{}>".format(_msg, _0))
@@ -311,8 +319,11 @@ class TestMetrics(unittest.TestCase):
                      {(1,): 1, (2,): 1, (1,2): 1})
         lhs, rhs = (2,), (1,) # lift = 1
         _0 = obj.lift_diag(lhs, rhs)
-        self.assertTrue(str(lhs) in _0)
-        self.assertTrue(str(rhs) in _0)
+        self.assertTrue(str(lhs) in _0,
+                        "missing {} in your msg '{}'".format(lhs, _0))
+        self.assertTrue(str(rhs) in _0,
+                        "missing {} in your msg '{}'".format(rhs, _0))
+
         _msg = "ne pas utiliser"
         self.assertTrue(_msg in _0,
                         "missing '{}' got <{}>".format(_msg, _0))

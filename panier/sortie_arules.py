@@ -1,5 +1,5 @@
 from apriori import Apriori
-from arules import Arules
+from rules import Arules
 
 """
 sortie reset()
@@ -28,7 +28,7 @@ print("#=== Evaluation des règles à partir du triplet (2,3,5) ===#")
 for lhs,rhs in [ [(2,5), (3,)], [(2,3), (5,)], [(3,5), (2,)] ]:
     print("evaluation de {} -> {}".format(lhs, rhs))
     for m in "support confidence conviction leverage lift lift_diag".split():
-            _r = getattr(br, m)(lhs, rhs)
-            _r = round(_r, 3) if isinstance(_r, float) else _r
-            print("{} : {}".format(getattr(br, m).__name__, _r))
-            print("#"+"="*73+"#")
+        _r = getattr(br, m)(lhs, rhs)
+        _r = round(_r, 3) if isinstance(_r, float) else _r
+        print("{} : {}".format(getattr(br, m).__name__, _r))
+        print("#"+"="*73+"#")

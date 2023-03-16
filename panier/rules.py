@@ -7,7 +7,6 @@ class Arules:
         self.list_itemsets = list_itemsets
         self.support_itemsets = support_itemsets
         self.reset()
-        self.support((), ())
 
     def reset(self):
         """
@@ -15,21 +14,19 @@ class Arules:
         self.rules = []
 
     def support(self, tg : tuple, td : tuple) -> float:
-        print("xDDD 1  ", self.list_itemsets)
-        print("XDDD 2", self.support_itemsets)
-        # faire union
-        # [(2,5), (3,)
-        # dans {100:[1, 3, 4], 200:[2, 3, 5], 300:[1, 2, 3, 5], 400:[2, 5]}
-        return 0
+        return self.support_itemsets.get(tuple(set(tg + td)))
 
     def confidence(self, tg : tuple, td : tuple) -> float:
-        pass
+        return self.support(tg + td, ()) / self.support(tg, ())
 
     def lift(self, tg : tuple, td : tuple) -> float:
-        pass
+        return self.support(tg, td) / \
+            (self.support(tg, ())*self.support(td, ()))
 
     def leverage(self, tg : tuple, td : tuple) -> float:
+        # 
         pass
 
     def conviction(self, tg : tuple, td : tuple) -> float:
-        pass
+        return (1 - self.support((), td)) / \
+            (1 - self.confidence(tg, td))
