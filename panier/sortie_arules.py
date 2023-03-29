@@ -32,3 +32,28 @@ for lhs,rhs in [ [(2,5), (3,)], [(2,3), (5,)], [(3,5), (2,)] ]:
         _r = round(_r, 3) if isinstance(_r, float) else _r
         print("{} : {}".format(getattr(br, m).__name__, _r))
         print("#"+"="*73+"#")
+
+## generate
+print("{0} generate_rules {0}".format('*=*'))
+data = {100:[1, 3, 4], 200:[2, 3, 5], 300:[1, 2, 3, 5], 400:[2, 5]}
+db = Apriori(data)
+br = Arules(db.main(.5), db.support_history)
+for k in (.75, .5, .25, .1):
+    print("min confiance", k)
+    print("rules before generation", br.rules)
+    _out = br.generate_rules( k )
+    print("rules after generate_rules", br.rules)
+    print("return of generate_rules ?", _out)
+    print("*"*17)
+## validate 
+data = {100:[1, 3, 4], 200:[2, 3, 5], 300:[1, 2, 3, 5], 400:[2, 5]}
+db = Apriori(data)
+br = Arules(db.main(.5), db.support_history)
+print("rules before validation", br.rules)
+_candidates = [(2,), (3,), (5,), (2,3), (2,5), (3,5)]
+threshold = 3/4
+print("candidates {} and minConfidence is {:.2f}"
+"".format(_candidates, threshold))
+_out = br.validation_rules((2,3,5), _candidates, threshold)
+print("rules after validation", br.rules)
+print("accepted rhs", _out)
