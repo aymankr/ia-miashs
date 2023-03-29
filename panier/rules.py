@@ -3,37 +3,40 @@ class Arules:
 
     """
 
-    def __init__(self, list_itemsets : list, support_itemsets: dict):
+    def __init__(self, list_itemsets: list, support_itemsets: dict):
         self.list_itemsets = list_itemsets
         self.support_itemsets = support_itemsets
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         """
         """
         self.rules = []
 
-    def support(self, tg : tuple, td : tuple) -> float:
-        return self.support_itemsets.get(tuple(set(tg + td)))
+    def support(self, tg: tuple, td: tuple) -> float:
+        return self.support_itemsets.get(tuple(set(tg).union(set(td))), 0)
 
-    def confidence(self, tg : tuple, td : tuple) -> float:
-        return self.support(tg, td) / self.support(tg, ())
+    def confidence(self, tg: tuple, td: tuple) -> float:
+        try:
+            return self.support(tg, td) / self.support(tg, ())
+        except ZeroDivisionError:
+            return 0
 
-    def lift(self, tg : tuple, td : tuple) -> float:
+    def lift(self, tg: tuple, td: tuple) -> float:
         return self.support(tg, td) / \
             (self.support(tg, ())*self.support(td, ()))
 
-    def leverage(self, tg : tuple, td : tuple) -> float:
+    def leverage(self, tg: tuple, td: tuple) -> float:
         return self.support(tg, td) - (self.support(tg, ()) * self.support((), td))
 
-    def conviction(self, tg : tuple, td : tuple) -> float:
+    def conviction(self, tg: tuple, td: tuple) -> float:
         if (1 - self.confidence(tg, td)) != 0:
             return (1 - self.support((), td)) / \
                 (1 - self.confidence(tg, td))
         else:
             return 0
     
-    def lift_diag(self, tg : tuple, td : tuple):
+    def lift_diag(self, tg: tuple, td: tuple) -> str:
         value = self.lift(tg, td)
         
         if value == 1:
@@ -45,65 +48,46 @@ class Arules:
 
         return message
         
-    def generate_rules(self, min_confidence):
-        self.rules = []
-
-        for itemset_list in self.list_itemsets[1:]:
-            for ref_itemset in itemset_list:
-                k = len(ref_itemset)
-                ref_items = [(item,) for item in ref_itemset]
-
-                if k == 2:
-                    self.rules += self.validation_rules(ref_itemset, ref_items, min_confidence)
+    def cross_product(self, rhs_list: list) -> list:
+        new_rhs_list = []
+        for i in range(len(rhs_list)):
+            for j in range(i+1, len(rhs_list)):
+                if rhs_list[i][:-1] == rhs_list[j][:-1]:
+                    new_rhs = rhs_list[i] + (rhs_list[j][-1],)
+                    new_rhs_list.append(new_rhs)
                 else:
-                    self.rules += self.build_rules(ref_itemset, ref_items, min_confidence)
+                    break
+        return new_rhs_list
 
-        return self.rules
-
-    def build_rules(self, ref_itemset, rhs_p, min_confidence):
-        local_rules = []
-        k = len(ref_itemset)
-
-        if k > len(rhs_p[0]) + 1:
-            rhs_q = self.cross_product(rhs_p)
-            local_rules += self.validation_rules(ref_itemset, rhs_q, min_confidence)
-            local_rules += self.build_rules(ref_itemset, rhs_q, min_confidence)
-
-        return local_rules
-
-    def validation_rules(self, itemset, candidates, min_confidence):
-        valid_rules = []
+    def validation_rules(self, itemset: tuple, rhs_list: list, min_confidence: float) -> list:
         accepted_rhs = []
-        for rhs in candidates:
+        for rhs in rhs_list:
             lhs = tuple(sorted(set(itemset) - set(rhs)))
-            conf = self.confidence(lhs, rhs)
-            if conf >= min_confidence:
-                rule = (lhs, rhs)
-                valid_rules.append(rule)
-                self.rules.append(rule)
+            confidence = self.support_itemsets[itemset] / self.support_itemsets[lhs]
+            if confidence >= min_confidence:
+                self.rules.append((lhs, rhs))
                 accepted_rhs.append(rhs)
-
         return accepted_rhs
 
-    def cross_product(self, L):
-        rep = []
-        taille = len(L)
+    def build_rules(self, itemset: tuple, rhs_list: list, min_confidence: float) -> list:
+        generated_rules = []
+        size_itemset = len(itemset)
+        size_rhs = 1
 
-        for i in range(taille - 1):
-            j = i + 1
-            while j < taille and L[i][:-1] == L[j][:-1]:
-                nouveau = L[i] + (L[j][-1],)
+        while len(rhs_list) > 1 and size_itemset > size_rhs + 1:
+            rhs_list = self.cross_product(rhs_list)
+            rhs_list = self.validation_rules(itemset, rhs_list, min_confidence)
+            generated_rules += [(tuple(sorted(set(itemset) - set(rhs))), rhs) for rhs in rhs_list]
+            size_rhs += 1
 
-                all_subsets_present = True
-                for x in range(len(nouveau)):
-                    sub_itemset = nouveau[:x] + nouveau[x + 1:]
-                    if sub_itemset not in L:
-                        all_subsets_present = False
-                        break
-
-                if all_subsets_present:
-                    rep.append(nouveau)
-
-                j = j + 1
-
-        return rep
+        return generated_rules    
+    
+    def generate_rules(self, min_confidence: float) -> None:
+            self.rules = []
+            for itemsets_of_size_k in self.list_itemsets[1:]:
+                for itemset in itemsets_of_size_k:
+                    rhs_list = [(item,) for item in itemset]
+                    if len(itemset) == 2:
+                        self.rules += self.validation_rules(itemset, rhs_list, min_confidence)
+                    else:
+                        self.rules += self.build_rules(itemset, rhs_list, min_confidence)
