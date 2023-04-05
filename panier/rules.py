@@ -1,3 +1,5 @@
+import pandas as pd
+
 class Arules:
     """
 
@@ -8,7 +10,7 @@ class Arules:
         self.support_itemsets = support_itemsets
         self.reset()
 
-    def reset(self) -> None:
+    def reset(self):
         """
         """
         self.rules = []
@@ -23,18 +25,19 @@ class Arules:
             return 0
 
     def lift(self, tg: tuple, td: tuple) -> float:
-        return self.support(tg, td) / \
-            (self.support(tg, ())*self.support(td, ()))
+        deno = self.support(tg, ()) * self.support(td, ())
+        return self.support(tg, td) / deno if deno != 0 else 0
 
     def leverage(self, tg: tuple, td: tuple) -> float:
         return self.support(tg, td) - (self.support(tg, ()) * self.support((), td))
 
     def conviction(self, tg: tuple, td: tuple) -> float:
-        if (1 - self.confidence(tg, td)) != 0:
-            return (1 - self.support((), td)) / \
-                (1 - self.confidence(tg, td))
+        conf = self.confidence(tg, td)
+        if conf == 1:
+            return None
         else:
-            return 0
+            return (1 - self.support((), td)) / (1 - conf) if (1 - conf) != 0 else 0
+
     
     def lift_diag(self, tg: tuple, td: tuple) -> str:
         value = self.lift(tg, td)
@@ -47,47 +50,63 @@ class Arules:
             message = f"{tg} -> {td} est prédictive"
 
         return message
-        
-    def cross_product(self, rhs_list: list) -> list:
-        new_rhs_list = []
-        for i in range(len(rhs_list)):
-            for j in range(i+1, len(rhs_list)):
-                if rhs_list[i][:-1] == rhs_list[j][:-1]:
-                    new_rhs = rhs_list[i] + (rhs_list[j][-1],)
-                    new_rhs_list.append(new_rhs)
-                else:
-                    break
-        return new_rhs_list
 
     def validation_rules(self, itemset: tuple, rhs_list: list, min_confidence: float) -> list:
         accepted_rhs = []
         for rhs in rhs_list:
             lhs = tuple(sorted(set(itemset) - set(rhs)))
-            confidence = self.support_itemsets[itemset] / self.support_itemsets[lhs]
+            confidence = self.confidence(lhs, rhs)
             if confidence >= min_confidence:
                 self.rules.append((lhs, rhs))
                 accepted_rhs.append(rhs)
         return accepted_rhs
 
-    def build_rules(self, itemset: tuple, rhs_list: list, min_confidence: float) -> list:
-        generated_rules = []
-        size_itemset = len(itemset)
-        size_rhs = 1
 
-        while len(rhs_list) > 1 and size_itemset > size_rhs + 1:
-            rhs_list = self.cross_product(rhs_list)
-            rhs_list = self.validation_rules(itemset, rhs_list, min_confidence)
-            generated_rules += [(tuple(sorted(set(itemset) - set(rhs))), rhs) for rhs in rhs_list]
+    def cross_product(self, L: list, k: int) -> list:
+        new_itemsets = []
+        for i in range(len(L)):
+            for j in range(i + 1, len(L)):
+                if L[i][:k - 1] == L[j][:k - 1]:
+                    new_itemset = L[i] + (L[j][k - 1],)
+                    new_itemsets.append(new_itemset)
+                else:
+                    break
+        return new_itemsets
+
+    def build_rules(self, lk:tuple, rhs_list: list, min_confidence: float):
+        size_lk = len(lk)
+        size_rhs = 1
+        local = rhs_list
+
+        while len(local) > 1 and size_lk > size_rhs + 1:
+            local = self.cross_product(local, size_rhs)
+            local = self.validation_rules(lk, local, min_confidence)
             size_rhs += 1
 
-        return generated_rules    
-    
-    def generate_rules(self, min_confidence: float) -> None:
-            self.rules = []
-            for itemsets_of_size_k in self.list_itemsets[1:]:
-                for itemset in itemsets_of_size_k:
-                    rhs_list = [(item,) for item in itemset]
-                    if len(itemset) == 2:
-                        self.rules += self.validation_rules(itemset, rhs_list, min_confidence)
-                    else:
-                        self.rules += self.build_rules(itemset, rhs_list, min_confidence)
+    def generate_rules(self, min_confidence: float):
+        self.rules = []
+        for itemsets_of_size_k in self.list_itemsets[1:]:
+            for itemset in itemsets_of_size_k:
+                rhs_list = [(item,) for item in itemset]
+                if len(itemset) == 2:
+                    self.validation_rules(itemset, rhs_list, min_confidence)
+                else:
+                    self.build_rules(itemset, rhs_list, min_confidence)
+
+    def main(self, min_confidence: float) -> pd.DataFrame:
+        results = []
+        self.generate_rules(min_confidence)
+        for lhs, rhs in self.rules:
+            lhs_support = self.support(lhs, ())
+            rhs_support = self.support((), rhs)
+            support = self.support(lhs, rhs)
+            confidence = self.confidence(lhs, rhs)
+            lift = self.lift(lhs, rhs)
+            leverage = self.leverage(lhs, rhs)
+            conviction = self.conviction(lhs, rhs)
+            if conviction is None:
+                conviction = float('inf')
+            results.append((lhs, rhs, lhs_support, rhs_support, support, confidence, lift, leverage, conviction))
+
+        df = pd.DataFrame(results, columns=['lhs', 'rhs', 'lhs_support', 'rhs_support', 'support', 'confidence', 'lift', 'leverage', 'conviction'])
+        return df[df['confidence'] >= min_confidence].reset_index(drop=True)
